@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  phone             String?
+  passwordHash      String?
+  firstName         String?
+  displayName       String?
+  dateOfBirth       DateTime?
+  gender            String?
+  country           String?
+  city              String?
+  bio               String?
+  profileVisible    Boolean  @default(true)
+  openToInternational Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  profiles          Profile?
+  likesSent         Like[]   @relation("LikeSender")
+  likesReceived     Like[]   @relation("LikeReceiver")
+  passesSent        Pass[]   @relation("PassSender")
+  matches           Match[]  @relation("MatchUser")
+  notifications    Notification[]
+}
+
+model Profile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id])
+  age                Int?
+  occupation         String?
+  education          String?
+  relationshipGoal  String?
+  languages          String[]
+  interests          String[]
+  hobbies            String[]
+  travelInterests    String[]
+  lifestylePrefs     String[]
+  datingPrefs        String[]
+  profilePhotos      String[]
+  profileVideos      String[]
+  verificationStatus String   @default("UNVERIFIED")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Like {
+  id          String   @id @default(cuid())
+  senderId    String
+  receiverId  String
+  createdAt   DateTime @default(now())
+  sender      User     @relation("LikeSender", fields: [senderId], references: [id])
+  receiver    User     @relation("LikeReceiver", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+}
+
+model Pass {
+  id          String   @id @default(cuid())
+  senderId    String
+  receiverId  String
+  createdAt   DateTime @default(now())
+  sender      User     @relation("PassSender", fields: [senderId], references: [id])
+
+  @@unique([senderId, receiverId])
+}
+
+model Match {
+  id          String   @id @default(cuid())
+  userAId     String
+  userBId     String
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  user        User     @relation("MatchUser", fields: [userAId], references: [id])
+
+  @@unique([userAId, userBId])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  matchId     String
+  senderId    String
+  body        String
+  createdAt   DateTime @default(now())
+  isEdited    Boolean  @default(false)
+  isDeleted   Boolean  @default(false)
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  title       String
+  body        String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model SubscriptionPlan {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  name            String
+  price           Decimal
+  currency        String
+  durationDays    Int
+  dailyDiscovery  Int
+  features        Json
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  enabled     Boolean  @default(false)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

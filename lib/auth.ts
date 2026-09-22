@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "global-date-dev-secret";
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 24;
@@ -14,25 +14,36 @@ export async function hashPassword(password: string) {
 }
 
 export async function verifyPassword(password: string, storedHash: string) {
-  if (!storedHash) return false;
+  const parts = storedHash?.split(":") ?? [];
 
-  const parts = storedHash.split(":");
   if (parts[0] === "scrypt" && parts.length === 3) {
     const [, salt, expectedHash] = parts;
     const actualHash = scryptSync(password, salt, 64).toString("hex");
-    const expected = Buffer.from(expectedHash, "hex");
-    const actual = Buffer.from(actualHash, "hex");
-    return expected.length === actual.length && timingSafeEqual(expected, actual);
+    return safeEqualHex(expectedHash, actualHash);
   }
 
-  // Legacy development hashes are accepted only so existing local accounts can migrate.
+  // Compatibility for accounts created by the original local scaffold.
   if (parts.length === 2) {
     const [salt, expectedHash] = parts;
-    const actualHash = scryptSync(password, salt, 64).toString("hex");
-    return timingSafeEqual(Buffer.from(expectedHash, "hex"), Buffer.from(actualHash, "hex"));
+    const legacyHash = createHash("sha256").update(`${salt}:${password}`).digest("hex");
+    if (safeEqualHex(expectedHash, legacyHash)) return true;
+
+    // Also accept the early scrypt format if a local database used it before the prefix was added.
+    const scryptHash = scryptSync(password, salt, 64).toString("hex");
+    return safeEqualHex(expectedHash, scryptHash);
   }
 
   return false;
+}
+
+function safeEqualHex(expectedHex: string, actualHex: string) {
+  try {
+    const expected = Buffer.from(expectedHex, "hex");
+    const actual = Buffer.from(actualHex, "hex");
+    return expected.length > 0 && expected.length === actual.length && timingSafeEqual(expected, actual);
+  } catch {
+    return false;
+  }
 }
 
 export function createToken(payload: Record<string, unknown>) {
@@ -55,8 +66,7 @@ export function parseToken(token: string) {
     if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
 
     const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf-8")) as Record<string, unknown>;
-    if (typeof decoded.exp !== "number" || decoded.exp <= Date.now()) return null;
-    return decoded;
+    return typeof decoded.exp === "number" && decoded.exp > Date.now() ? decoded : null;
   } catch {
     return null;
   }

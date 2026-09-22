@@ -2,38 +2,44 @@ import { NextResponse } from "next/server";
 import { getBearerToken, parseToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: Request) {
+function userIdFromRequest(request: Request) {
   const token = getBearerToken(request);
-  if (!token) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const payload = token ? parseToken(token) : null;
+  return typeof payload?.sub === "string" ? payload.sub : null;
+}
 
-  const payload = parseToken(token);
-  const userId = typeof payload?.sub === "string" ? payload.sub : null;
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function GET(request: Request) {
+  const userId = userIdFromRequest(request);
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const limit = Number(new URL(request.url).searchParams.get("limit") ?? "12");
+  const blocked = await prisma.block.findMany({
+    where: { blockerId: userId },
+    select: { blockedId: true }
+  });
+  const blockedIds = blocked.map((item) => item.blockedId);
 
-  const users = await prisma.user.findMany({
+  const profiles = await prisma.user.findMany({
     where: {
-      id: { not: userId },
-      profileVisible: true
+      id: { notIn: [userId, ...blockedIds] },
+      profileVisible: true,
+      blocksReceived: { none: { blockerId: userId } },
+      OR: [
+        { openToInternational: true },
+        { id: { notIn: blockedIds } }
+      ]
     },
-    include: { profiles: true },
-    take: Number.isFinite(limit) && limit > 0 ? Math.min(limit, 25) : 12
+    include: { profile: true },
+    orderBy: { createdAt: "desc" },
+    take: Math.min(Math.max(Number(new URL(request.url).searchParams.get("limit") ?? 12), 1), 25)
   });
 
-  const profiles = users.map((user) => ({
+  return NextResponse.json({ profiles: profiles.map((user) => ({
     id: user.id,
     displayName: user.displayName ?? user.firstName ?? "New member",
-    country: user.country,
     city: user.city,
+    country: user.country,
     bio: user.bio,
-    profile: user.profiles,
-    openToInternational: user.openToInternational
-  }));
-
-  return NextResponse.json({ profiles });
+    openToInternational: user.openToInternational,
+    profile: user.profile
+  })) });
 }

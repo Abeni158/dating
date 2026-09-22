@@ -1,0 +1,68 @@
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+
+const JWT_SECRET = process.env.JWT_SECRET ?? "global-date-dev-secret";
+
+export async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const hash = createHash("sha256").update(`${salt}:${password}`).digest("hex");
+  return `${salt}:${hash}`;
+}
+
+export async function verifyPassword(password: string, storedHash: string) {
+  if (!storedHash || !storedHash.includes(":")) {
+    return false;
+  }
+
+  const [salt, expectedHash] = storedHash.split(":");
+  if (!salt || !expectedHash) {
+    return false;
+  }
+
+  const computedHash = createHash("sha256").update(`${salt}:${password}`).digest("hex");
+  const expectedBuffer = Buffer.from(expectedHash, "hex");
+  const computedBuffer = Buffer.from(computedHash, "hex");
+
+  if (expectedBuffer.length !== computedBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(expectedBuffer, computedBuffer);
+}
+
+export function createToken(payload: Record<string, unknown>) {
+  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+  const body = Buffer.from(JSON.stringify({ ...payload, exp: Date.now() + 1000 * 60 * 60 * 24 })).toString("base64url");
+  const signature = createHmac("sha256", JWT_SECRET).update(`${header}.${body}`).digest("base64url");
+
+  return `${header}.${body}.${signature}`;
+}
+
+export function parseToken(token: string) {
+  if (!token) return null;
+
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+
+  const [header, payload, signature] = parts;
+  const expectedSignature = createHmac("sha256", JWT_SECRET).update(`${header}.${payload}`).digest("base64url");
+
+  try {
+    if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+      return null;
+    }
+
+    const decoded = Buffer.from(payload, "base64url").toString("utf-8");
+    return JSON.parse(decoded) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+export function getBearerToken(request: Request) {
+  const authorization = request.headers.get("authorization") ?? "";
+  if (!authorization.startsWith("Bearer ")) {
+    return null;
+  }
+
+  return authorization.replace("Bearer ", "").trim();
+}

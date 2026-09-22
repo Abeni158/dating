@@ -8,48 +8,54 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  phone             String?
-  passwordHash      String?
-  firstName         String?
-  displayName       String?
-  dateOfBirth       DateTime?
-  gender            String?
-  country           String?
-  city              String?
-  bio               String?
-  profileVisible    Boolean  @default(true)
-  openToInternational Boolean @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  profiles          Profile?
-  likesSent         Like[]   @relation("LikeSender")
-  likesReceived     Like[]   @relation("LikeReceiver")
-  passesSent        Pass[]   @relation("PassSender")
-  matches           Match[]  @relation("MatchUser")
-  notifications    Notification[]
+  id                    String         @id @default(cuid())
+  email                 String         @unique
+  phone                 String?
+  passwordHash          String?
+  firstName             String?
+  displayName           String?
+  dateOfBirth           DateTime?
+  gender                String?
+  country               String?
+  city                  String?
+  bio                   String?
+  profileVisible        Boolean        @default(true)
+  openToInternational   Boolean        @default(false)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  profile               Profile?
+  likesSent             Like[]         @relation("LikeSender")
+  likesReceived         Like[]         @relation("LikeReceiver")
+  passesSent            Pass[]         @relation("PassSender")
+  matchesInitiated      Match[]        @relation("MatchInitiator")
+  matchesReceived       Match[]        @relation("MatchRecipient")
+  messagesSent          Message[]      @relation("MessageSender")
+  notifications         Notification[]
+  blocksInitiated       Block[]        @relation("BlockInitiator")
+  blocksReceived        Block[]        @relation("BlockRecipient")
+  reportsMade           Report[]        @relation("ReportAuthor")
+  reportsReceived       Report[]        @relation("ReportTarget")
 }
 
 model Profile {
-  id                 String   @id @default(cuid())
-  userId             String   @unique
-  user               User     @relation(fields: [userId], references: [id])
-  age                Int?
-  occupation         String?
-  education          String?
-  relationshipGoal  String?
-  languages          String[]
-  interests          String[]
-  hobbies            String[]
-  travelInterests    String[]
-  lifestylePrefs     String[]
-  datingPrefs        String[]
-  profilePhotos      String[]
-  profileVideos      String[]
-  verificationStatus String   @default("UNVERIFIED")
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  age                 Int?
+  occupation          String?
+  education           String?
+  relationshipGoal    String?
+  languages           String[] @default([])
+  interests           String[] @default([])
+  hobbies             String[] @default([])
+  travelInterests     String[] @default([])
+  lifestylePrefs      String[] @default([])
+  datingPrefs         String[] @default([])
+  profilePhotos       String[] @default([])
+  profileVideos       String[] @default([])
+  verificationStatus  String   @default("UNVERIFIED")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 model Like {
@@ -57,10 +63,10 @@ model Like {
   senderId    String
   receiverId  String
   createdAt   DateTime @default(now())
-  sender      User     @relation("LikeSender", fields: [senderId], references: [id])
-  receiver    User     @relation("LikeReceiver", fields: [receiverId], references: [id])
-
+  sender      User     @relation("LikeSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User     @relation("LikeReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   @@unique([senderId, receiverId])
+  @@index([receiverId, createdAt])
 }
 
 model Pass {
@@ -68,30 +74,36 @@ model Pass {
   senderId    String
   receiverId  String
   createdAt   DateTime @default(now())
-  sender      User     @relation("PassSender", fields: [senderId], references: [id])
-
+  sender      User     @relation("PassSender", fields: [senderId], references: [id], onDelete: Cascade)
   @@unique([senderId, receiverId])
+  @@index([senderId, createdAt])
 }
 
 model Match {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userAId     String
   userBId     String
-  status      String   @default("ACTIVE")
-  createdAt   DateTime @default(now())
-  user        User     @relation("MatchUser", fields: [userAId], references: [id])
-
+  status      String    @default("ACTIVE")
+  createdAt   DateTime  @default(now())
+  userA       User      @relation("MatchInitiator", fields: [userAId], references: [id], onDelete: Cascade)
+  userB       User      @relation("MatchRecipient", fields: [userBId], references: [id], onDelete: Cascade)
+  messages    Message[]
   @@unique([userAId, userBId])
+  @@index([userBId, status])
 }
 
 model Message {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   matchId     String
   senderId    String
   body        String
-  createdAt   DateTime @default(now())
-  isEdited    Boolean  @default(false)
-  isDeleted   Boolean  @default(false)
+  createdAt   DateTime  @default(now())
+  isEdited    Boolean   @default(false)
+  isDeleted   Boolean   @default(false)
+  readAt      DateTime?
+  match       Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  sender      User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  @@index([matchId, createdAt])
 }
 
 model Notification {
@@ -102,7 +114,32 @@ model Notification {
   body        String
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, isRead, createdAt])
+}
+
+model Block {
+  id          String   @id @default(cuid())
+  blockerId   String
+  blockedId   String
+  createdAt   DateTime @default(now())
+  blocker     User     @relation("BlockInitiator", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked     User     @relation("BlockRecipient", fields: [blockedId], references: [id], onDelete: Cascade)
+  @@unique([blockerId, blockedId])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String
+  targetUserId String
+  category    String
+  details     String?
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+  reporter    User     @relation("ReportAuthor", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetUser  User     @relation("ReportTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  @@index([status, createdAt])
+  @@index([targetUserId, createdAt])
 }
 
 model SubscriptionPlan {

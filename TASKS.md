@@ -20,13 +20,14 @@
 - [x] implement discovery feed foundation and likes/passes
 - [x] create match creation and match feed
 
-## Phase 3 - Messaging
+## Phase 3 - Messaging and safety
 - [x] persist messages in PostgreSQL through Prisma
 - [x] authorize message access to match members only
 - [x] add conversation read/send UI
-- [ ] add read receipts and typing indicators
-- [ ] add blocking, reporting, and unmatch controls
-- [ ] add realtime transport and push notification adapter
+- [x] add read receipts and unmatch endpoint
+- [x] add block and report endpoints
+- [ ] add typing indicators and realtime transport
+- [ ] add push notification adapter
 
 ## Phase 4 - Global discovery
 - [ ] add continent/country/city reference data

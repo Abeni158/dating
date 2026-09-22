@@ -1,24 +1,21 @@
 # GLOBAL DATE PROGRESS
 
-## Status: Core dating and messaging implementation in progress
+## Status: Messaging and trust foundation in progress
 
 ### Completed
-- repository inspected and stack documented
-- Next.js app shell, navigation, and responsive design foundation
-- PostgreSQL/Prisma schema foundation
-- local Docker environment for PostgreSQL and Redis
-- signup and login API routes with validation and password hashing
-- authenticated profile retrieval/update API
-- authenticated discovery API
-- likes, passes, daily limits, compatibility scoring, and match creation APIs
+- Next.js application shell and responsive design foundation
+- Prisma PostgreSQL schema for users, profiles, discovery, matches, messages, notifications, plans, and flags
+- signup/login APIs with validation and password hashing
+- authenticated profile and discovery APIs
+- likes, passes, compatibility scoring, daily limits, and match creation
 - seeded local profile data
-- client-side signup/login integration
-- client-side discovery, profile, and match loading
-- authenticated persisted message API with match-membership authorization
-- conversation UI for reading and sending messages
+- persisted message API and protected conversation UI
+- match membership authorization
+- read receipt and unmatch endpoint
+- block and report API foundation
 
 ### Next active objective
-Strengthen messaging and trust boundaries, then add profile media, blocking, reporting, and notification foundations.
+Add media storage abstraction and profile editing/upload flow, then build configurable geography, subscriptions, and moderation operations.
 
-### Important validation note
-The repository tools can commit files but cannot execute npm, Prisma, Docker, or browser test commands in this session. Run the documented commands locally or in CI before treating the release as production-ready.
+### Validation note
+Repository tools can commit changes but do not execute npm, Prisma, Docker, or browser tests in this session. Run the documented commands locally or in CI before production use.

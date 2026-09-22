@@ -1,9 +1,9 @@
 # GLOBAL DATE PROGRESS
 
-## Status: Messaging and trust foundation in progress
+## Status: Profile foundation and security hardening in progress
 
 ### Completed
-- Next.js application shell and responsive design foundation
+- Next.js app shell and responsive design foundation
 - Prisma PostgreSQL schema for users, profiles, discovery, matches, messages, notifications, plans, and flags
 - signup/login APIs with validation and password hashing
 - authenticated profile and discovery APIs
@@ -13,9 +13,11 @@
 - match membership authorization
 - read receipt and unmatch endpoint
 - block and report API foundation
+- authenticated profile editing UI
+- stronger scrypt password hashing and token expiration validation
 
 ### Next active objective
-Add media storage abstraction and profile editing/upload flow, then build configurable geography, subscriptions, and moderation operations.
+Add media storage abstraction and profile photo workflow, then build configurable geography, subscriptions, and moderation operations.
 
 ### Validation note
 Repository tools can commit changes but do not execute npm, Prisma, Docker, or browser tests in this session. Run the documented commands locally or in CI before production use.

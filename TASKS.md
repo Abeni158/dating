@@ -15,7 +15,7 @@
 - [x] add discovery API foundation
 
 ## Phase 2 - Core dating
-- [x] implement profile creation foundation and editing API
+- [x] implement profile creation and editing flow
 - [ ] build photo upload and quality guidance
 - [x] implement discovery feed foundation and likes/passes
 - [x] create match creation and match feed

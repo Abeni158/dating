@@ -1,21 +1,24 @@
 # GLOBAL DATE PROGRESS
 
-## Status: Foundation started
+## Status: Core dating and messaging implementation in progress
 
 ### Completed
-- repository inspected
-- stack direction chosen
-- architecture drafted
-- project management files created
-- base database schema drafted
-- minimal app shell scaffolded
+- repository inspected and stack documented
+- Next.js app shell, navigation, and responsive design foundation
+- PostgreSQL/Prisma schema foundation
+- local Docker environment for PostgreSQL and Redis
+- signup and login API routes with validation and password hashing
+- authenticated profile retrieval/update API
+- authenticated discovery API
+- likes, passes, daily limits, compatibility scoring, and match creation APIs
+- seeded local profile data
+- client-side signup/login integration
+- client-side discovery, profile, and match loading
+- authenticated persisted message API with match-membership authorization
+- conversation UI for reading and sending messages
 
 ### Next active objective
-Complete the foundation phase by defining the local dev environment, database configuration, and design tokens for the core app shell.
+Strengthen messaging and trust boundaries, then add profile media, blocking, reporting, and notification foundations.
 
-### Immediate milestones
-1. Add Docker Compose setup for PostgreSQL and Redis
-2. Add environment example file
-3. Add Prisma migration setup and seed plan
-4. Add design system tokens and base components
-5. Begin authentication and profile foundation
+### Important validation note
+The repository tools can commit files but cannot execute npm, Prisma, Docker, or browser test commands in this session. Run the documented commands locally or in CI before treating the release as production-ready.

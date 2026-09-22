@@ -1,0 +1,74 @@
+/* Additional accessible and chat-specific primitives. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.form-error {
+  color: #ff9eae;
+  margin: 0;
+}
+
+.empty-state {
+  color: var(--muted);
+  text-align: center;
+}
+
+.chat-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.message-list {
+  display: grid;
+  gap: 0.75rem;
+  min-height: 180px;
+}
+
+.message-bubble {
+  max-width: min(720px, 92%);
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 16px 4px;
+  background: rgba(110, 201, 255, 0.08);
+}
+
+.message-bubble p {
+  margin: 0;
+  color: var(--text);
+}
+
+.message-bubble time {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.message-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+}
+
+.message-form input {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text);
+  padding: 0.9rem 1rem;
+}
+
+@media (max-width: 600px) {
+  .message-form {
+    grid-template-columns: 1fr;
+  }
+}
